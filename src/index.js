@@ -3,7 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'
 
-import models from './models';
+import models, { sequelize } from './models';
 import routes from './routes';
 
 //console.log('Hello World!')
@@ -29,6 +29,47 @@ app.use('/session', routes.session)
 app.use('/users', routes.user)
 app.use('/messages', routes.message)
 
-app.listen(process.env.PORT, () => {
-	console.log(`[!] Listening on port ${process.env.PORT}!`);
+const eraseDatabaseOnSync = true;
+
+sequelize.sync().then(() => {
+	if(eraseDatabaseOnSync){
+		createUserWithMessages();
+	}
+
+	app.listen(process.env.PORT, () => {
+		console.log(`[!] Listening on port ${process.env.PORT}!`);
+	})
 })
+
+const createUserWithMessages = async () => {
+	await models.User.create(
+		{
+			username: 'sntaks',
+			messages: [
+				{
+					text: 'A work in progress.',
+				},
+			],
+		},
+		{
+			include: [models.Message]
+		}
+	);
+
+	await models.User.create(
+		{
+			username: 'vkioko',
+			messages: [
+				{
+					text: 'This is spectacular.',
+				},
+				{
+					text: 'This is even more spectacular.',
+				},
+			],
+		},
+		{
+			include: [models.Message]
+		}
+	)
+}
